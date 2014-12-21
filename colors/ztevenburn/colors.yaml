@@ -1,0 +1,14 @@
+# Steven's Zenburn mod. Slightly darker background.
+---
+bd: '#E3E3CECEABAB'
+fg: &fg '#BABABDBDB6B6'
+#bg: &bg '#181818181818'
+bg: &bg '#1C1C1C1C1C1C'
+color0: [ *bg, '#3F3F3F3F3F3F' ]
+color1: '#CCCC93939393'
+color2: '#7F7F9F9F7F7F'
+color3: '#E3E3CECEABAB'
+color4: '#DFDFAFAF8F8F'
+color5: '#CCCC93939393'
+color6: '#8C8CD0D0D3D3'
+color7: [ *fg, '#DCDCDCDCCCCC' ]
