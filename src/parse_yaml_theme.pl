@@ -27,7 +27,6 @@ use FindBin;
 use Getopt::Long;
 use Pod::Usage;
 use YAML;
-use Path::Tiny;
 use Getopt::Long;
 
 $::VERSION = '1.00';
