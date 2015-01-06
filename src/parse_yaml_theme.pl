@@ -116,6 +116,9 @@ if (@ARGV) {
         if (exists($scheme{$key})) {
             say $scheme{$key};
         }
+        elsif ($key eq 'show') {
+            show_palette(\%scheme, \@palette);
+        }
         elsif ($key eq 'yaml') {
             print Dump($hashref);
         }
@@ -140,6 +143,67 @@ else {
     say "palette=( ", join(" ", map { "'$_'" } @palette), " )";
 }
 
+sub parse_rgb {
+    my $rgb = shift;
+    if ($rgb =~ /^\#(..)(..)(..)$/) {
+        return (hex($1), hex($2), hex($3));
+    }
+    elsif ($rgb =~ /^\#(..)..(..)..(..)..$/) {
+        return (hex($1), hex($2), hex($3));
+    }
+    else {
+        return (127, 127, 127);
+    }
+}
+
+sub rgb_str {
+    my ($str, $bg, $fg) = @_;
+
+    my @bg = parse_rgb($bg // '#101010');
+    my @fg = parse_rgb($fg // '#808080');
+
+    return "\x1b[38;2;$fg[0];$fg[1];$fg[2]m"
+         . "\x1b[48;2;$bg[0];$bg[1];$bg[2]m"
+         . "$str\x1b[0m";
+}
+
+sub show_palette {
+    my ($scheme, $palette) = @_;
+
+    print "bd_color: |", rgb_str("  ", $scheme->{bd}), "|\n";
+    print "fg_color: |", rgb_str("  ", $scheme->{fg}), "|\n";
+    print "bg_color: |", rgb_str("  ", $scheme->{bg}), "|\n";
+    print "palette:\n";
+
+    #print "@palette\n";
+    print   "        ",
+            " Black ", " ",
+            "  Red  ", " ",
+            " Green ", " ",
+            "Yellow ", " ",
+            " Blue  ", " ",
+            "Magenta", " ",
+            " Cyan  ", " ",
+            " White ",
+            "\n";
+    print "Normal:";
+    for my $i (0..7) {
+        print " ", rgb_str(
+            '       ',
+            $palette[$i],
+        );
+    }
+    print "\n";
+    print "Bright:";
+    for my $i (8..15) {
+        print " ", rgb_str(
+            '       ',
+            $palette[$i],
+        );
+    }
+    print "\n";
+}
+
 __END__
 
 =head1 NAME
@@ -150,7 +214,7 @@ parse_yaml_theme.pl - create gnome-terminal theme values from a YAML file
 
 B<parse_yaml_theme.pl>
 I<YAML-file>
-[B<bd>|B<bg>|B<fg>|B<palette_dconf>|B<palette_gconf>|B<yaml>|B<shell>] ...
+[B<show>|B<bd>|B<bg>|B<fg>|B<palette_dconf>|B<palette_gconf>|B<yaml>|B<shell>] ...
 
 =head1 DESCRIPTION
 
@@ -209,6 +273,13 @@ above input have been expanded and replaced):
       - '#BABABDBDB6B6'
       - '#DCDCDCDCCCCC'
     fg: '#BABABDBDB6B6'
+
+=head2 Palette Output
+
+Print the palette colors on the terminal (only works for gnome-terminal
+3.12 and above):
+
+    $ parse_yaml_theme.pl steven.yaml show
 
 =head2 Default Output
 
