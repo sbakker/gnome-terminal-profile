@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 dir=$(dirname "$0")
-yamlparse=$dir/mk_theme.pl
+yamlparse=$dir/src/parse_yaml_theme.pl
 
 declare -a schemes
 schemes=($(cd $dir/colors && echo * && cd - > /dev/null))
