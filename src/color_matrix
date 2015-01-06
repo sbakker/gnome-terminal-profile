@@ -1,0 +1,85 @@
+#!/bin/sh
+
+color8() {
+    local bg=$1; shift
+    local fg=$1; shift
+    local string="$@"
+    echo -n " [4${bg};3${fg}m${string}[00;00m"
+}
+
+color16() {
+    local bg=$1; shift
+    local fg=$1; shift
+    local string="$@"
+    echo -n "[48;5;${bg}m";
+    echo -n "[38;5;${fg}m";
+    echo -n "$string[00;00m"
+}
+
+# Simple colors.
+echo 'Eight colors: ^[[4${BG};3{$FG}m'
+echo
+echo "      BG"
+echo -n "     "
+for bg in 0 1 2 3 4 5 6 7; do
+    printf " %2d" $bg
+done
+
+echo
+for fg in 0 1 2 3 4 5 6 7
+do
+    if [ $fg = 0 ]; then
+        echo -n "FG"
+    else
+        echo -n "  "
+    fi
+    printf " %d " $fg
+
+    for bg in 0 1 2 3 4 5 6 7
+    do
+        color8 $bg $fg ab
+    done
+    echo
+done
+
+echo; echo
+echo 'Sixteen colors: ^[[48;5;${BG}m ^[[38;5;${FG}m'
+echo
+echo "       BG"
+echo -n "      "
+for bg in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    printf " %2d" $bg
+done
+echo
+
+for fg in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+do
+    if [ $fg = 0 ]; then
+        echo -n "FG"
+    else
+        echo -n "  "
+    fi
+    printf " %2d " $fg
+
+    for bg in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+    do
+        echo -n " "
+        color16 $bg $fg ab
+    done
+    echo
+done
+
+echo; echo
+echo 'Terminal palette:'
+echo
+echo    "         Black    Red    Green  Yellow   Blue   Magenta  Cyan    White"
+echo -n "Normal:"
+for bg in 0 1 2 3 4 5 6 7; do
+    echo -n " $(color16 $bg 0 '       ')"
+done
+echo
+echo -n "Bright:"
+for bg in 8 9 10 11 12 13 14 15; do
+    echo -n " $(color16 $bg 0 '       ')"
+done
+echo
