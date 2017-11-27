@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
-gnomeVersion="$(expr "$(gnome-terminal --version)" : '.* \(.*[.].*[.].*\)$')"
+
+declare -a gnomeVersion
+
+gnomeVersion=($(
+    gnome-terminal --version | \
+        perl -p -E 'say "$1 $2 $3" if /^.*?(\d+)\.(\d+)(?:\.(\d+))/'
+))
 
 # newGnome=1 if the gnome-terminal version >= 3.8
-if [[ ("$(echo "$gnomeVersion" | cut -d"." -f1)" = "3" && \
-       "$(echo "$gnomeVersion" | cut -d"." -f2)" -ge 8) || \
-       "$(echo "$gnomeVersion" | cut -d"." -f1)" -ge 4 ]]
-  then newGnome="1"
+if [[ 
+    ( ${gnomeVersion[0]} -eq 3 && ${gnomeVersion[1]} -ge 8 )
+    || ${gnomeVersion[0]} -ge 4
+]]; then
+  newGnome="1"
   dconfdir=/org/gnome/terminal/legacy/profiles:
 else
   newGnome=0
