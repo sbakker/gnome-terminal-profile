@@ -1,0 +1,7 @@
+gnome-terminal-colors-solarized
+colors/*/bd_color
+colors/*/fg_color
+colors/*/bg_color
+colors/*/palette
+colors/*/palette_?conf
+*.old
