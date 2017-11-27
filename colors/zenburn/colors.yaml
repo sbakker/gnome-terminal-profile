@@ -1,0 +1,13 @@
+# Zenburn
+---
+bd: '#E3E3CECEABAB'
+fg: &fg '#DCDCDCDCCCCC'
+bg: &bg '#3F3F3F3F3F3F'
+color0: *bg
+color1: '#CCCC93939393'
+color2: '#7F7F9F9F7F7F'
+color3: '#E3E3CECEABAB'
+color4: '#DFDFAFAF8F8F'
+color5: '#CCCC93939393'
+color6: '#8C8CD0D0D3D3'
+color7: *fg
