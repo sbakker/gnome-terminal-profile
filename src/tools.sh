@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
-declare -a gnomeVersion
-
 gnomeVersion=($(
-    gnome-terminal --version | \
-        perl -p -E 'say "$1 $2 $3" if /^.*?(\d+)\.(\d+)(?:\.(\d+))/'
+    version_string=$(LANGUAGE=en_US.UTF-8 gnome-terminal --version)
+    [[ $version_string =~ ([0-9]+((\.[0-9]+)*)) ]] && version=${BASH_REMATCH[1]}
+    echo ${version//./ }
 ))
 
 # newGnome=1 if the gnome-terminal version >= 3.8
@@ -30,3 +29,10 @@ in_array() {
   return 1
 }
 
+to_gconf() {
+    tr '\n' \: | sed 's#:$#\n#'
+}
+
+to_dconf() {
+    tr '\n' '~' | sed -e "s#~\$#']\n#" -e "s#~#', '#g" -e "s#^#['#"
+}
