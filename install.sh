@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 dir=$(dirname "$0")
 yamlparse=$dir/src/parse_yaml_theme.pl
 
@@ -29,6 +28,7 @@ show_help() {
   echo
 }
 
+
 validate_scheme() {
   local profile=$1
   in_array $scheme "${schemes[@]}" || die "$scheme is not a valid scheme" 2
@@ -51,8 +51,8 @@ set_profile_colors() {
     bd_color=$(cat $scheme_dir/bd_color)
     bg_color=$(cat $scheme_dir/bg_color)
     fg_color=$(cat $scheme_dir/fg_color)
-    palette_dconf=$(cat $scheme_dir/palette_dconf)
-    palette_gconf=$(cat $scheme_dir/palette_gconf)
+    palette_dconf="$(to_dconf < $scheme_dir/palette)"
+    palette_gconf="$(to_gconf < $scheme_dir/palette)"
   fi
 
   if [ "$newGnome" = "1" ]
@@ -84,10 +84,10 @@ set_profile_colors() {
     gconftool-2 -s -t string $profile_path/foreground_color $fg_color
 
     # make sure the profile is set to not use theme colors
-    gconftool-2 -s -t bool $profile_path/use_theme_colors false
+    gconftool-2 -s -t bool $profile_path/use_theme_colors "false"
 
     # set highlighted color to be different from foreground color
-    gconftool-2 -s -t bool $profile_path/bold_color_same_as_fg false
+    gconftool-2 -s -t bool $profile_path/bold_color_same_as_fg "false"
   fi
 }
 
@@ -135,7 +135,7 @@ interactive_confirm() {
   echo -n "(YES to continue) "
 
   read confirmation
-  if [[ $(echo $confirmation | tr '[:lower:]' '[:upper:]') != YES ]]
+  if [[ ${confirmation^^} != YES ]]
   then
     die "ERROR: Confirmation failed -- ABORTING!"
   fi
@@ -164,6 +164,12 @@ do
       profile=$2
       shift
     ;;
+    --install-dircolors )
+      install_dircolors=true
+    ;;
+    --skip-dircolors )
+      install_dircolors=false
+    ;;
   esac
   shift
 done
@@ -171,7 +177,20 @@ done
 if [[ -z $scheme ]] || [[ -z $profile ]]
 then
   interactive_help
+fi
+
+if [[ -n $scheme ]]
+  then validate_scheme $scheme
+else
   interactive_select_scheme "${schemes[@]}"
+fi
+
+if [[ -n $profile ]]
+  then if [ "$newGnome" = "1" ]
+    then profile="$(get_uuid "$profile")"
+  fi
+  validate_profile $profile
+else
   if [ "$newGnome" = "1" ]
     then check_empty_profile
   fi
@@ -179,13 +198,12 @@ then
   interactive_confirm
 fi
 
-if [[ -n $scheme ]] && [[ -n $profile ]]
-then
-  validate_scheme $scheme
-  if [ "$newGnome" = "1" ]
-    then profile="$(get_uuid "$profile")"
-  fi
-  validate_profile $profile
-  set_profile_colors $profile $scheme
-  check_dircolors || warning_message_dircolors
+set_profile_colors $profile $scheme
+
+if [[ -n $install_dircolors ]]
+    then if "$install_dircolors"
+        then copy_dircolors
+    fi
+else
+    check_dircolors || warning_message_dircolors
 fi
