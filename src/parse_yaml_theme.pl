@@ -349,7 +349,7 @@ Get the palette string for dconf
 (note that long lines are broken up with
 C<\> characters, for clarity's sake):
 
-    $ parse_yaml_theme.pl palette_dconf
+    $ parse_yaml_theme.pl steven.yaml palette_dconf
     '#1C1C1C1C1C1C', '#CCCC93939393', \
     '#7F7F9F9F7F7F', '#E3E3CECEABAB', \
     '#DFDFAFAF8F8F', '#CCCC93939393', \
@@ -363,7 +363,7 @@ Get the palette string for gconf
 (note that long lines are broken up with
 C<\> characters, for clarity's sake):
 
-    $ parse_yaml_theme.pl palette_gconf
+    $ parse_yaml_theme.pl steven.yaml palette_gconf
     #1C1C1C1C1C1C:#CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:\
     #DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:#BABABDBDB6B6:\
     #3F3F3F3F3F3F:#CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:\
