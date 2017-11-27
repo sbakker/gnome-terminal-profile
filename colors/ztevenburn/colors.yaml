@@ -6,7 +6,7 @@ fg: &fg '#BABDB6'
 bg: &bg '#1C1C1C'
 color0: [ *bg,       '#3F3F3F' ]
 color1: [ '#DD9393', '#EEA3A3' ]
-color2: [ '#7F9F7F', '#8FAF8F' ]
+color2: [ '#7F9F7F', '#9FCF9F' ]
 color3: [ '#E3CEAB', '#F3DEBB' ]
 color4: [ '#DFAF8F', '#EFBF9F' ]
 color5: [ '#C693A4', '#D7A3B4' ]
