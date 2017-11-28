@@ -59,7 +59,6 @@ set_profile_colors() {
     then local profile_path=$dconfdir/$profile
 
     # set color palette
-    set -x
     dconf write $profile_path/palette "[$palette_dconf]"
 
     # set foreground, background and highlight color
@@ -72,7 +71,6 @@ set_profile_colors() {
 
     # set highlighted color to be different from foreground color
     dconf write $profile_path/bold-color-same-as-fg "false"
-    set +x
 
   else
     local profile_path=$gconfdir/$profile
