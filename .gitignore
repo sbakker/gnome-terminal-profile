@@ -4,3 +4,4 @@ colors/*/bg_color
 colors/*/palette
 colors/*/palette_?conf
 *.old
+.*.swp
