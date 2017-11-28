@@ -154,6 +154,10 @@ shell$ mv wacko.yaml colors/wacko/colors.yaml
 shell$ ./install.sh -p Wacko -s wacko
 ```
 
+The result will then be something like:
+
+![screenshot](img/wacko-screenshot2.png)
+
 ---
 
 [Anthony25's gnome-terminal-colors-solarized]: https://github.com/Anthony25/gnome-terminal-colors-solarized
