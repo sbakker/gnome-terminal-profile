@@ -2,8 +2,13 @@
 
 Script(s) for defining Gnome Terminal themes with a YAML file.
 
-Builds on the [Anthony repo] for solarized Gnome Terminal colors (the
+Builds on [Anthony25's gnome-terminal-colors-solarized] for solarized Gnome Terminal colors (the
 repository is added as a submodule of this repository).
+
+This repository comes with two YAML-base themes: *zenburn* and *ztevenburn*.
+The zenburn theme is based on [planbnet's gnome-terminal-zenburn.sh], while
+*ztevenburn* similar to Zenburn, but with more contrast (i.e. a darker
+background).
 
 ## Copyright & License
 
@@ -55,9 +60,23 @@ perldoc src/parse_yaml_theme.pl
 src/parse_yaml_theme.pl --manual
 ```
 
+### Standalone usage
+
+The `install.sh` script was copied from [Anthony25's gnome-terminal-colors-solarized]
+repository and modified to include the use of the YAML parser.
+
+```
+git submodule init
+mkdir -p ./colors/my-color
+
+# ... create a colors.yaml in ./colors/my-color
+
+./install.sh
+```
+
 ### Using with gnome-terminal-colors-solarized
 
-To use with the [Anthony repo]:
+To use with [Anthony25's gnome-terminal-colors-solarized] repository:
 
 Copy your YAML file to a new directory in the `colors` directory:
 
@@ -79,33 +98,37 @@ cd /path/to/gnome-terminal-colors-solarized
 ./install.sh
 ```
 
-### Standalone usage
-
-The `install.sh` script was copied from [Anthony repo] and modified to include
-the use of the YAML parser.
-
-```
-mkdir -p ./colors/my-color
-cp my-color.yaml ./colors/my-color/colors.yaml
-./install.sh
-```
-
-**NOTE: At this moment this will fail due to missing support scripts.**
-
 ## Scripts
 
 ### parse_yaml_theme.pl
 
+Parse a YAML-based theme.
+
+```
+$ src/parse_yaml_theme.pl ./colors/ztevenburn/colors.yaml
+bd_color='#E3CEAB'
+bg_color='#1C1C1C'
+fg_color='#BABDB6'
+palette=( '#1C1C1C' '#DD9393' '#7F9F7F' '#E3CEAB' '#DFAF8F' '#C693A4'
+'#8CD0D3' '#BABDB6' '#3F3F3F' '#EEA3A3' '#9FCF9F' '#F3DEBB' '#EFBF9F'
+'#D7A3B4' '#9CE0E3' '#DCDCCC' )
+```
+
+Also has a preview option with the `show` sub-command:
+
+![screenshot](img/parse_yaml_theme-screenshot.png)
+
 ### color_matrix
+
+Show a matrix of the terminal colors.
+
+![screenshot](img/color_matrix-screenshot.png)
 
 ### tools.sh 
 
-(copied from [Anthony repo])
+(copied from [Anthony25's gnome-terminal-colors-solarized] repo)
 
 ---
 
-[Anthony repo]: https://github.com/Anthony25/gnome-terminal-colors-solarized
-[Solarized homepage]:   http://ethanschoonover.com/solarized
-[Solarized repository]: https://github.com/altercation/solarized
-[Gnome Terminal Colors Solarized repository]: https://github.com/sigurdga/gnome-terminal-colors-solarized
-[dircolors solarised color theme]: https://github.com/seebi/dircolors-solarized
+[Anthony25's gnome-terminal-colors-solarized]: https://github.com/Anthony25/gnome-terminal-colors-solarized
+[planbnet's gnome-terminal-zenburn.sh]: https://gist.github.com/planbnet/1422472
