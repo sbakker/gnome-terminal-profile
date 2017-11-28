@@ -40,13 +40,13 @@ The following modules should be part of the default Perl installation:
   * `File::Basename`
   * `FindBin`
   * `Getopt::Long`
+  * `Time::Piece`
 
 The following modules will probably need to be installed separately:
 
   * `Modern::Perl`
   * `Pod::Usage`
   * `YAML`
-  * `Time::Piece`
 
 ## Initialisation
 
