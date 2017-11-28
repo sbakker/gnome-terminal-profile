@@ -16,6 +16,7 @@ show_help() {
   echo "    install.sh [-h|--help] \\"
   echo "               (-s <scheme>|--scheme <scheme>|--scheme=<scheme>) \\"
   echo "               (-p <profile>|--profile <profile>|--profile=<profile>)"
+  echo "               [OPTION]..."
   echo
   echo "Options"
   echo
@@ -25,6 +26,8 @@ show_help() {
   echo "        Color scheme to be used"
   echo "    -p, --profile"
   echo "        Gnome Terminal profile to overwrite"
+  echo "    --install-dircolors, --skip-dircolors"
+  echo "        Do or skip the dircolors installation in a non interactive mode"
   echo
 }
 
