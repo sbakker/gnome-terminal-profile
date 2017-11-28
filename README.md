@@ -2,13 +2,17 @@
 
 Script(s) for defining Gnome Terminal themes with a YAML file.
 
-Builds on [Anthony25's gnome-terminal-colors-solarized] for solarized Gnome Terminal colors (the
+Builds on [Anthony25's gnome-terminal-colors-solarized] for solarized Gnome Terminal colours (the
 repository is added as a submodule of this repository).
 
 This repository comes with two YAML-base themes: *zenburn* and *ztevenburn*.
 The zenburn theme is based on [planbnet's gnome-terminal-zenburn.sh], while
 *ztevenburn* similar to Zenburn, but with more contrast (i.e. a darker
 background).
+
+Screenshot for comparison:
+
+![screenshot](img/Zenburn_Ztevenburn_comparison.png)
 
 ## Copyright & License
 
@@ -91,7 +95,7 @@ Then, "compile" it to create the appropriate files:
 src/parse_yaml_theme.pl /path/to/gnome-terminal-colors-solarized/my-theme/colors.yaml compile
 ```
 
-Finally, use the `install.sh` script to install the color theme.
+Finally, use the `install.sh` script to install the colour theme.
 
 ```
 cd /path/to/gnome-terminal-colors-solarized
@@ -120,13 +124,34 @@ Also has a preview option with the `show` sub-command:
 
 ### color_matrix
 
-Show a matrix of the terminal colors.
+Show a matrix of the terminal colours. Example with the `ztevenburn` theme:
 
 ![screenshot](img/color_matrix-screenshot.png)
 
-### tools.sh 
+### random_theme.pl
 
-(copied from [Anthony25's gnome-terminal-colors-solarized] repo)
+Fun stuff for generating a completely random colour theme. Script spits out a
+random YAML configuration.
+
+To generate, use `random_theme.pl` and run `parse_yaml_theme.pl` to show the
+results:
+
+```
+shell$ src/random_theme.pl > wacko.yaml
+shell$ src/parse_yaml_theme.pl wacko.yaml show
+```
+
+This will look something like:
+
+![screenshot](img/wacko-screenshot.png)
+
+Then, save the YAML file in a theme directory and install the theme:
+
+```
+shell$ mkdir -p colors/wacko
+shell$ mv wacko.yaml colors/wacko/colors.yaml
+shell$ ./install.sh -p Wacko -s wacko
+```
 
 ---
 
