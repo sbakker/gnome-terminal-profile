@@ -37,15 +37,16 @@ along with this program.  If not, see [<http://www.gnu.org/licenses/>](http://ww
 
 The following modules should be part of the default Perl installation:
 
-    * File::Basename
-    * FindBin
-    * Getopt::Long
+  * `File::Basename`
+  * `FindBin`
+  * `Getopt::Long`
 
 The following modules will probably need to be installed separately:
 
-    * Modern::Perl (>= 1.20170117)
-    * Pod::Usage (1.69)
-    * YAML (>= 1.23)
+  * `Modern::Perl`
+  * `Pod::Usage`
+  * `YAML`
+  * `Time::Piece`
 
 ## Initialisation
 
