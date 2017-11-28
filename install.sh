@@ -35,7 +35,7 @@ validate_scheme() {
 }
 
 set_profile_colors() {
-  local profile=$1
+  local profile=:$1
   local scheme=$2
   local scheme_dir=$dir/colors/$scheme
 
@@ -59,6 +59,7 @@ set_profile_colors() {
     then local profile_path=$dconfdir/$profile
 
     # set color palette
+    set -x
     dconf write $profile_path/palette "[$palette_dconf]"
 
     # set foreground, background and highlight color
@@ -71,6 +72,7 @@ set_profile_colors() {
 
     # set highlighted color to be different from foreground color
     dconf write $profile_path/bold-color-same-as-fg "false"
+    set +x
 
   else
     local profile_path=$gconfdir/$profile
