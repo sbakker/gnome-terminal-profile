@@ -7,8 +7,8 @@
 #
 #  Description:  Create gnome-terminal theme from YAML file.
 #
-#       Author:  Steven Bakker (SB), <Steven.Bakker@ams-ix.net>
-#      Created:  17/12/14
+#       Author:  Steven Bakker (SB), <sb@monkey-mind.net>
+#      Created:  17 Dec 2014
 #
 #   Copyright (c) 2014-2017 Steven Bakker; All rights reserved.
 #
