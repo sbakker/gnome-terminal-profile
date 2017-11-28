@@ -1,0 +1,1 @@
+../gnome-terminal-colors-solarized/src/profiles.sh
