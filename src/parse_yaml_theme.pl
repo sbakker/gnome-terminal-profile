@@ -147,10 +147,10 @@ sub compile_scheme {
 
     my $output_dir = dirname($file);
     for my $key (qw( bd bg fg )) {
-        write_file("$output_dir/${key}_color", $theme_ref->{$key}, "\n");
+        write_file("$output_dir/${key}_color", uc $theme_ref->{$key}, "\n");
     }
 
-    write_file("$output_dir/palette", map { "$_\n" } @$palette_ref);
+    write_file("$output_dir/palette", map { uc "$_\n" } @$palette_ref);
 }
 
 
