@@ -114,7 +114,7 @@ else {
 sub parse_theme {
     my $file = shift;
 
-    my $theme_ref = eval { YAML::LoadFile( $file ) };
+    my $theme_ref = eval { YAML::LoadFile( $file eq '-' ? *STDIN : $file ) };
     if (my $err = $@) {
         $err =~ s/\n* at .*? line \d+\.\n*$//;
         die "*** $FindBin::Script: $err\n";
@@ -206,24 +206,95 @@ sub parse_rgb {
 }
 
 
-sub rgb_str {
-    my ($str, $bg, $fg) = @_;
+sub rgb_start {
+    my ($bg, $fg) = @_;
 
     my @bg = parse_rgb($bg // '#101010');
     my @fg = parse_rgb($fg // '#808080');
 
     return "\x1b[38;2;$fg[0];$fg[1];$fg[2]m"
-         . "\x1b[48;2;$bg[0];$bg[1];$bg[2]m"
-         . "$str\x1b[0m";
+         . "\x1b[48;2;$bg[0];$bg[1];$bg[2]m";
 }
 
+sub rgb_end {
+    return "\x1b[0m";
+}
+
+sub rgb_str {
+    my ($str, $bg, $fg) = @_;
+
+    return rgb_start($bg, $fg)
+         . $str
+         . rgb_end();
+}
+
+sub demo_string {
+    my ($str, $theme, $palette_ref) = @_;
+
+    state $bold      = `tput bold`;
+    state $italics   = `tput sitm`;
+    state $reverse   = `tput rev`;
+    state $standout  = `tput smso`;
+    state $underline = `tput smul`;
+    state $normal    = `tput sgr0`;
+
+    my $fg = $theme->{fg};
+    my $bg = $theme->{bg};
+    my $bd = $theme->{bd};
+
+    state $attr_map = {
+        'B' => $bold,
+        'I' => $italics,
+        'R' => $reverse,
+        'S' => $standout,
+        'U' => $underline,
+    };
+    #$str = rgb_str($str);
+    while ($str =~ /^(.*?)([BIRSU])<([^>]*)>(.*)$/) {
+        my $attr_string = $attr_map->{$2} // $bold;
+        $str = $1
+             . $attr_string
+             . rgb_start($bg, $bd) . $3
+             . $normal
+             . rgb_start($bg, $fg) . $4
+             ;
+    }
+
+    while ($str =~ /^(.*?)(\d+)<([^>]*)>(.*)$/) {
+        my $ci = $2;
+        my $fg_color = $palette_ref->[$ci];
+        $str = $1
+             . rgb_start($bg, $fg_color)
+             . $3
+             . rgb_start($bg, $fg) . $4
+             ;
+    }
+    return rgb_start($bg, $fg).$str.rgb_end();
+}
 
 sub show_palette {
     my ($scheme, $palette_ref) = @_;
 
-    print "bd_color: |", rgb_str("  ", $scheme->{bd}), "|\n";
-    print "fg_color: |", rgb_str("  ", $scheme->{fg}), "|\n";
-    print "bg_color: |", rgb_str("  ", $scheme->{bg}), "|\n";
+    my @lorem = (
+        " 0<Lorem> 1<ipsum> 2<dolor> 3<sit> 4<amet>, 5<hinc> 6<consequat ex mea>, 7<usu> ",
+        " 8<senserit> 9<iracundia> 10<cu>. 11<Ut> 12<tritani> 13<iuvaret> 14<mei>, 15<persius> ",
+        " B<consequat> I<persecuti> U<ex> R<pri>. B<Aliquip> U<imperdiet> te I<has>   ",
+    );
+
+    my $lorem_len = length($lorem[0] =~ s/(?:\d+|[BIRS])<(.*?)>/$1/gr);
+
+    print "\n";
+
+    print "              ",
+          "    ", demo_string(" " x $lorem_len, $scheme, $palette_ref), "\n";
+    print "bd_color: |", rgb_str("  ", $scheme->{bd}), "|",
+          "    ", demo_string($lorem[0], $scheme, $palette_ref), "\n";
+    print "fg_color: |", rgb_str("  ", $scheme->{fg}), "|",
+          "    ", demo_string($lorem[1], $scheme, $palette_ref), "\n";
+    print "bg_color: |", rgb_str("  ", $scheme->{bg}), "|",
+          "    ", demo_string($lorem[2], $scheme, $palette_ref), "\n";
+    print "              ",
+          "    ", demo_string(" " x $lorem_len, $scheme, $palette_ref), "\n";
     print "palette:\n";
 
     #print "@palette\n";
@@ -252,7 +323,7 @@ sub show_palette {
             $palette_ref->[$i],
         );
     }
-    print "\n";
+    print "\n\n";
 }
 
 __END__
