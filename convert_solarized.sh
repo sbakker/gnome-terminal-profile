@@ -4,7 +4,7 @@
 #
 #   Usage:
 #
-#     convert_solarized.sh [colors-dir]
+#     convert_solarized.sh [colors-dir [dest-prefix]]
 #
 #   Default "colors-dir" is "gnome-terminal-colors-solarized/colors"
 #
@@ -17,10 +17,31 @@
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+topdir=gnome-terminal-colors-solarized/colors
+destprefix=solarized-
+
+usage() {
+cat <<EOF >&2
+
+Usage: $0 [colors-dir [dest-prefix]]
+
+default colors-dir is $topdir
+default dest-prefix is \"$destprefix\"
+YAML files are left in "color/\${destprefix}PROFILE/colors.yaml"
+
+EOF
+    exit 1
+}
+
 case $# in
-    0) topdir=gnome-terminal-colors-solarized/colors ;;
-    1) topdir=$1 ;;
-    *) echo "usage: $0 [colors-dir]" >&2; exit 1 ;;
+    0) ;;
+    1) topdir=$1
+       ;;
+    2) topdir=$1
+       destprefix=$2
+       ;;
+    *) usage
+       ;;
 esac
 
 currdir=$(pwd)
@@ -30,7 +51,7 @@ cd $topdir
 for dir in *
 do
     if [[ -d $dir && -f $dir/palette ]]; then
-        dest=$currdir/colors/solarized-$base
+        dest=$currdir/colors/$destprefix$dir
         mkdir -p $dest
         echo "converting $topdir/$dir"
         $currdir/src/theme_to_yaml.pl $dir > $dest/colors.yaml
