@@ -136,7 +136,7 @@ sub parse_theme {
     }
 
     $theme_ref->{bg} //= $palette[0];
-    $theme_ref->{fg} //= $palette[1];
+    $theme_ref->{fg} //= $palette[7];
     $theme_ref->{bd} //= $theme_ref->{fg};
     return ($theme_ref, \@palette);
 }
