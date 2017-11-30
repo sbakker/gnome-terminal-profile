@@ -458,7 +458,7 @@ One or more errors occurred.
 
 =head1 AUTHOR
 
-Steven Bakker E<lt>Steven.Bakker@ams-ix.netE<gt>; 2014.
+Steven Bakker E<lt>sb@monkey-mind.netE<gt>.
 
 =head1 COPYRIGHT AND LICENSE
 
