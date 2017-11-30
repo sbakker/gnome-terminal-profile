@@ -18,7 +18,10 @@
 #
 # ============================================================================
 
-use Modern::Perl;
+use v5.10;
+use strict;
+use warnings;
+
 use FindBin;
 use Time::Piece;
 

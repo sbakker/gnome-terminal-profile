@@ -33,7 +33,7 @@ along with this program.  If not, see [<http://www.gnu.org/licenses/>](http://ww
 
 ## Requirements
 
-### Perl
+### Perl (5.10 or later)
 
 The following modules should be part of the default Perl installation:
 
@@ -44,7 +44,6 @@ The following modules should be part of the default Perl installation:
 
 The following modules will probably need to be installed separately:
 
-  * `Modern::Perl`
   * `Pod::Usage`
   * `YAML`
 
