@@ -1,0 +1,572 @@
+#!/usr/bin/perl
+# ============================================================================
+#
+#         File:  ramp_color
+#
+#        Usage:  See POD at end.
+#
+#  Description:  Show color ramp for a given color in gnome-terminal
+#
+#       Author:  Steven Bakker (SB), <sb@monkey-mind.net>
+#      Created:  12 Dec 2017
+#
+#   Copyright (c) 2017 Steven Bakker; All rights reserved.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the same terms as Perl itself. See "perldoc perlartistic".
+#
+#   This software is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# ============================================================================
+
+use v5.14;
+use strict;
+use warnings;
+
+use FindBin;
+use Getopt::Long;
+use Pod::Usage;
+use Getopt::Long;
+use List::Util qw( first );
+use Term::ReadKey qw( GetTerminalSize );
+
+
+$::VERSION = '1.01';
+my $app_header = "\nThis is $FindBin::Script, v$::VERSION\n\n"
+               . "See \"perldoc $FindBin::Script\" for more information.\n"
+               ;
+
+my ($WCHAR, $HCHAR, $WPIXELS, $HPIXELS) = GetTerminalSize();
+
+my $MAX_STEPS = $WCHAR - 2;
+
+my $LOREM_IPSUM = join(' ', split(' ', qq{
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+    enim ad minim veniam, quis nostrud exercitation ullamco laboris
+    nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+    reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+    pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+    culpa qui officia deserunt mollit anim id est laborum.
+}));
+
+my $RGB_FILE = first { -f $_ } qw(
+    /usr/share/X11/rgb.txt
+    /usr/lib/X11/rgb.txt
+);
+
+Getopt::Long::Configure("bundling");
+
+GetOptions(
+    'help|?'     => sub {
+        pod2usage(-msg => $app_header, -exitval=>0, -verbose=>0)
+    },
+    'manual'     => sub { pod2usage(-exitval=>0, -verbose=>2) },
+    'version|V'  => sub { print $app_header; exit(0) },
+    # Custom options.
+    'steps=i'    => \(my $steps = 50),
+    'level=f'    => \(my $level = 50),
+    'text=s'     => \(my $text = $LOREM_IPSUM),
+) or pod2usage(-exitval=>2);
+
+pod2usage(-message => "\nNeed at most one argument\n", -exitval => 2)
+    if @ARGV > 1;
+
+my $color = @ARGV ? shift @ARGV : '#808080';
+
+if (lc $color eq 'random') {
+	$color = sprintf("#%06x", rand(0x1000000));
+}
+$color = shade_color($color);
+
+$level = 100 if $level > 100;
+$level = -100 if $level < -100;
+
+$text  = $LOREM_IPSUM if $text !~ /\S/;
+my $tsteps = length($text);
+$tsteps = $MAX_STEPS if $tsteps > $MAX_STEPS;
+
+$steps = $MAX_STEPS if $steps > $MAX_STEPS;
+
+my $base     = shade_color($color, 0);
+my $end      = shade_color($color, $level);
+my $stepsize = $level*1.0/$steps;
+
+if (abs($stepsize) < 1) {
+    $steps = abs($level);
+    $stepsize = $level*1.0/$steps;
+}
+
+say "Base colour: |"
+    .rgb_str("  ", $base, $base)
+    ."| ($base)";
+say "End colour:  |"
+    .rgb_str("  ", $end, $end)
+    ."| ($end)";
+
+say "Step size:   ".sprintf("%0.2f%%", $stepsize);
+say "Steps:       $steps";
+print "\n";
+
+for my $step (0..$steps) {
+    my $l = $level/$steps * $step;
+    my $c = shade_color($color, $l);
+    print rgb_str(' ', $c, $c);
+}
+print "\n";
+
+for my $step (0..$tsteps) {
+    my $l = $level/$tsteps * $step;
+    my $c = shade_color($color, $l);
+    print fg_start($c).substr($text, $step%length($text), 1).rgb_end();
+}
+print "\n";
+
+my %str;
+for my $fg ('black', 'white') {
+    my $str = '';
+    for my $step (0..$tsteps) {
+        my $l = $level/$tsteps * $step;
+        my $c = shade_color($color, $l);
+        $str .= rgb_str(substr($text, $step%length($text), 1), $c, $fg);
+    }
+    $str{"fg_$fg"} = $str."\n";
+    $str = '';
+    for my $step (0..$tsteps) {
+        my $l = $level/$tsteps * $step;
+        my $c = shade_color($color, $l);
+        $str .= rgb_str(substr($text, $step%length($text), 1), $fg, $c);
+    }
+    $str{"bg_$fg"} = $str."\n";
+}
+
+print $str{fg_white},$str{fg_black},$str{bg_white},$str{bg_black};
+
+exit 0;
+
+sub get_rgb {
+    state $rgb = undef;
+
+    return $rgb if defined $rgb;
+    $rgb = {};
+    return $rgb if !defined $RGB_FILE;
+
+    open my $fh, '<', $RGB_FILE
+        or die "Cannot read $RGB_FILE: $!\n";
+
+    while (my $l = <$fh>) {
+        next unless $l =~ /^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.*)$/;
+        my ($r, $g, $b, $name) = ($1, $2, $3, lc $4);
+        $rgb->{$name} = [ $r, $g, $b ];
+    }
+    return $rgb;
+}
+
+sub shade_color {
+    my ($color, $level) = @_;
+
+    my @color = parse_rgb($color);
+
+    #$level = 254.0 - 254.0/100 * $level;
+    my $newcolor = '#';
+
+    $level //= 0;
+
+    if ($level >= 0) {
+        # Lighten...
+        for my $comp (@color) {
+            my $delta = 0xff - $comp;
+            $comp += $delta/100 * $level;
+            $newcolor .= sprintf("%02X", $comp+0.5);
+        }
+    }
+    else {
+        # Darken...
+        for my $comp (@color) {
+            $comp += $comp/100 * $level;
+            $newcolor .= sprintf("%02X", $comp+0.5)
+        }
+    }
+    return $newcolor;
+}
+
+
+sub parse_rgb {
+    my $color = shift @_;
+
+    $color =~ s/\s//g;
+
+    my @color = ( 127, 127, 127 );
+
+    if ($color =~ /^#(..)(..)(..)$/) {
+        @color = (hex($1), hex($2), hex($3));
+    }
+    elsif ($color =~ /^#(.)(.)(.)$/) {
+        @color = (hex($1), hex($2), hex($3));
+    }
+    elsif ($color =~ /^rgb\((\d+),(\d+),(\d+)\)$/) {
+        @color = ($1, $2, $3);
+    }
+    else {
+        $color = lc $color;
+        my $rgb = get_rgb();
+        if (exists $rgb->{$color}) {
+            @color = @{$rgb->{$color}};
+        }
+        else {
+            die "Cannot parse color name '$color'\n";
+        }
+    }
+    return @color;
+}
+
+sub fg_start {
+    my $fg = shift @_;
+    my @fg = parse_rgb($fg // '#808080');
+    return "\x1b[38;2;$fg[0];$fg[1];$fg[2]m";
+}
+
+sub bg_start {
+    my $bg = shift @_;
+    my @bg = parse_rgb($bg // '#101010');
+    return "\x1b[48;2;$bg[0];$bg[1];$bg[2]m";
+}
+
+sub rgb_start {
+    my ($bg, $fg) = @_;
+
+    my @bg = parse_rgb($bg // '#101010');
+    my @fg = parse_rgb($fg // '#808080');
+
+    return fg_start($fg).bg_start($bg);
+}
+
+sub rgb_end {
+    return "\x1b[0m";
+}
+
+sub rgb_str {
+    my ($str, $bg, $fg) = @_;
+
+    return rgb_start($bg, $fg)
+         . $str
+         . rgb_end();
+}
+
+sub demo_string {
+    my ($str, $theme, $palette_ref) = @_;
+
+    state $bold      = `tput bold`;
+    state $italics   = `tput sitm`;
+    state $reverse   = `tput rev`;
+    state $standout  = `tput smso`;
+    state $underline = `tput smul`;
+    state $normal    = `tput sgr0`;
+
+    my $fg = $theme->{fg};
+    my $bg = $theme->{bg};
+    my $bd = $theme->{bd};
+
+    state $attr_map = {
+        'B' => $bold,
+        'I' => $italics,
+        'R' => $reverse,
+        'S' => $standout,
+        'U' => $underline,
+    };
+    #$str = rgb_str($str);
+    while ($str =~ /^(.*?)([BIRSU])<([^>]*)>(.*)$/) {
+        my $attr_string = $attr_map->{$2} // $bold;
+        $str = $1
+             . $attr_string
+             . rgb_start($bg, $bd) . $3
+             . $normal
+             . rgb_start($bg, $fg) . $4
+             ;
+    }
+
+    while ($str =~ /^(.*?)(\d+)<([^>]*)>(.*)$/) {
+        my $ci = $2;
+        my $fg_color = $palette_ref->[$ci];
+        $str = $1
+             . rgb_start($bg, $fg_color)
+             . $3
+             . rgb_start($bg, $fg) . $4
+             ;
+    }
+    return rgb_start($bg, $fg).$str.rgb_end();
+}
+
+sub show_palette {
+    my ($scheme, $palette_ref) = @_;
+
+    my @lorem = (
+        " 0<Lorem> 1<ipsum> 2<dolor> 3<sit> 4<amet>, 5<hinc> 6<consequat ex mea>, 7<usu> ",
+        " 8<senserit> 9<iracundia> 10<cu>. 11<Ut> 12<tritani> 13<iuvaret> 14<mei>, 15<persius> ",
+        " B<consequat> I<persecuti> U<ex> R<pri>. B<Aliquip> U<imperdiet> te I<has>   ",
+    );
+
+    my $lorem_len = length($lorem[0] =~ s/(?:\d+|[BIRS])<(.*?)>/$1/gr);
+
+    print "\n";
+
+    print "              ",
+          "    ", demo_string(" " x $lorem_len, $scheme, $palette_ref), "\n";
+    print "bd_color: |", rgb_str("  ", $scheme->{bd}), "|",
+          "    ", demo_string($lorem[0], $scheme, $palette_ref), "\n";
+    print "fg_color: |", rgb_str("  ", $scheme->{fg}), "|",
+          "    ", demo_string($lorem[1], $scheme, $palette_ref), "\n";
+    print "bg_color: |", rgb_str("  ", $scheme->{bg}), "|",
+          "    ", demo_string($lorem[2], $scheme, $palette_ref), "\n";
+    print "              ",
+          "    ", demo_string(" " x $lorem_len, $scheme, $palette_ref), "\n";
+    print "palette:\n";
+
+    #print "@palette\n";
+    print   "        ",
+            " Black ", " ",
+            "  Red  ", " ",
+            " Green ", " ",
+            "Yellow ", " ",
+            " Blue  ", " ",
+            "Magenta", " ",
+            " Cyan  ", " ",
+            " White ",
+            "\n";
+    print "Normal:";
+    for my $i (0..7) {
+        print " ", rgb_str(
+            '       ',
+            $palette_ref->[$i],
+        );
+    }
+    print "\n";
+    print "Bright:";
+    for my $i (8..15) {
+        print " ", rgb_str(
+            '       ',
+            $palette_ref->[$i],
+        );
+    }
+    print "\n\n";
+}
+
+__END__
+
+=head1 NAME
+
+parse_yaml_theme.pl - create gnome-terminal theme values from a YAML file
+
+=head1 SYNOPSIS
+
+B<ramp_color>
+[I<options>]
+I<color>
+
+=head1 DESCRIPTION
+
+Read I<YAML-file> for the values of a GNOME terminal theme. Spit out
+the colours on STDOUT.
+
+=head1 OPTIONS
+
+=over
+
+=item B<--version>, B<-V>
+X<--version>X<-V>
+
+Print program version to F<STDOUT> and exit.
+
+=back
+
+=head1 EXAMPLES
+
+=head2 YAML Input
+
+    # Steven's Zenburn mod. Slightly darker background.
+    ---
+    bd: '#E3E3CECEABAB'
+    fg: &fg '#BABABDBDB6B6'
+    #bg: &bg '#181818181818'
+    bg: &bg '#1C1C1C1C1C1C'
+    color0: [ *bg, '#3F3F3F3F3F3F' ]
+    color1: '#CCCC93939393'
+    color2: '#7F7F9F9F7F7F'
+    color3: '#E3E3CECEABAB'
+    color4: '#DFDFAFAF8F8F'
+    color5: '#CCCC93939393'
+    color6: '#8C8CD0D0D3D3'
+    color7: [ *fg, '#DCDCDCDCCCCC' ]
+
+=head2 Parsed YAML
+
+Print back the processed YAML (note that the anchors/references in the
+above input have been expanded and replaced):
+
+    $ parse_yaml_theme.pl steven.yaml yaml
+    ---
+    bd: '#E3E3CECEABAB'
+    bg: '#1C1C1C1C1C1C'
+    color0:
+      - '#1C1C1C1C1C1C'
+      - '#3F3F3F3F3F3F'
+    color1: '#CCCC93939393'
+    color2: '#7F7F9F9F7F7F'
+    color3: '#E3E3CECEABAB'
+    color4: '#DFDFAFAF8F8F'
+    color5: '#CCCC93939393'
+    color6: '#8C8CD0D0D3D3'
+    color7:
+      - '#BABABDBDB6B6'
+      - '#DCDCDCDCCCCC'
+    fg: '#BABABDBDB6B6'
+
+=head2 Compiled Output
+
+To produce output files that are compatible with the default C<install.sh> of
+L<Anthony's gnome-terminal-colors-solarized>, run this command:
+
+    $ parse_yaml_theme.pl steven.yaml compile
+    writing bd_color: ok
+    writing bg_color: ok
+    writing fg_color: ok
+    writing palette: ok
+
+It will create F<bd_color>, F<bg_color>, F<fg_color>, and F<palette> files in
+same directory as the YAML file.
+
+=head2 Palette Output
+
+Print the palette colors on the terminal (only works for gnome-terminal
+3.12 and above):
+
+    $ parse_yaml_theme.pl steven.yaml show
+    bd_color: |**|
+    fg_color: |++|
+    bg_color: |--|
+    palette:
+             Black    Red    Green  Yellow   Blue   Magenta  Cyan    White
+    Normal: [-----] [-----] [-----] [-----] [-----] [-----] [-----] [-----]
+    Bright: [+++++] [+++++] [+++++] [+++++] [+++++] [+++++] [+++++] [+++++]
+
+=head2 Default Output
+
+Note that long lines are broken up with
+C<\> characters, for clarity's sake:
+
+    $ parse_yaml_theme.pl steven.yaml
+    bd_color='#E3E3CECEABAB'
+    bg_color='#1C1C1C1C1C1C'
+    fg_color='#BABABDBDB6B6'
+    palette=( '#1C1C1C1C1C1C' '#CCCC93939393' \
+              '#7F7F9F9F7F7F' '#E3E3CECEABAB' \
+              '#DFDFAFAF8F8F' '#CCCC93939393' \
+              '#8C8CD0D0D3D3' '#BABABDBDB6B6' \
+              '#3F3F3F3F3F3F' '#CCCC93939393' \
+              '#7F7F9F9F7F7F' '#E3E3CECEABAB' \
+              '#DFDFAFAF8F8F' '#CCCC93939393' \
+              '#8C8CD0D0D3D3' '#DCDCDCDCCCCC' )
+
+=head2 Output for "install.sh"
+
+Output that can be C<eval>-ed in the shell to produce
+strings that can be used in the C<install.sh> script.
+Note that long lines are broken up with
+C<\> characters, for clarity's sake:
+
+    $ parse_yaml_theme.pl steven.yaml shell
+    bd_color='#E3E3CECEABAB'
+    bg_color='#1C1C1C1C1C1C'
+    fg_color='#BABABDBDB6B6'
+    palette_dconf="'#1C1C1C1C1C1C', '#CCCC93939393', '#7F7F9F9F7F7F', \
+     '#E3E3CECEABAB', '#DFDFAFAF8F8F', '#CCCC93939393', '#8C8CD0D0D3D3', \
+     '#BABABDBDB6B6', '#3F3F3F3F3F3F', '#CCCC93939393', '#7F7F9F9F7F7F', \
+     '#E3E3CECEABAB', '#DFDFAFAF8F8F', '#CCCC93939393', '#8C8CD0D0D3D3', \
+     '#DCDCDCDCCCCC'"
+    palette_gconf='#1C1C1C1C1C1C:#CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:\
+     #DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:#BABABDBDB6B6:#3F3F3F3F3F3F:\
+     #CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:#DFDFAFAF8F8F:#CCCC93939393:\
+     #8C8CD0D0D3D3:#DCDCDCDCCCCC'
+
+Typical usage:
+
+    $ eval $(parse_yaml_theme.pl steven.yaml shell)
+
+    $ dconf write $profile_path/palette "[$palette_dconf]"
+    $ dconf write $profile_path/bold-color "'$bd_color'"
+
+    $ gconftool-2 -s -t string $profile_path/palette $palette_gconf
+    $ gconftool-2 -s -t string $profile_path/bold_color $bd_color
+
+=head2 Individual Colours
+
+Get the bold colour:
+
+    $ parse_yaml_theme.pl steven.yaml bd
+    #E3E3CECEABAB
+
+Get the bold, foreground and background colours:
+
+    $ parse_yaml_theme.pl steven.yaml bd fg bg
+    #E3E3CECEABAB
+    #BABABDBDB6B6
+    #1C1C1C1C1C1C
+
+=head2 Palette Strings
+
+Get the palette string for dconf
+(note that long lines are broken up with
+C<\> characters, for clarity's sake):
+
+    $ parse_yaml_theme.pl steven.yaml palette_dconf
+    '#1C1C1C1C1C1C', '#CCCC93939393', \
+    '#7F7F9F9F7F7F', '#E3E3CECEABAB', \
+    '#DFDFAFAF8F8F', '#CCCC93939393', \
+    '#8C8CD0D0D3D3', '#BABABDBDB6B6', \
+    '#3F3F3F3F3F3F', '#CCCC93939393', \
+    '#7F7F9F9F7F7F', '#E3E3CECEABAB', \
+    '#DFDFAFAF8F8F', '#CCCC93939393', \
+    '#8C8CD0D0D3D3', '#DCDCDCDCCCCC'
+
+Get the palette string for gconf
+(note that long lines are broken up with
+C<\> characters, for clarity's sake):
+
+    $ parse_yaml_theme.pl steven.yaml palette_gconf
+    #1C1C1C1C1C1C:#CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:\
+    #DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:#BABABDBDB6B6:\
+    #3F3F3F3F3F3F:#CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:\
+    #DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:#DCDCDCDCCCCC
+
+=head1 EXIT CODE
+
+=over
+
+=item I<zero>
+
+Success.
+
+=item I<non-zero>
+
+One or more errors occurred.
+
+=back
+
+=head1 AUTHOR
+
+Steven Bakker E<lt>sb@monkey-mind.netE<gt>.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2014-2017 Steven Bakker; All rights reserved.
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself. See "perldoc perlartistic".
+
+This software is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+=cut
