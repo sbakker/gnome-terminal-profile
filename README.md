@@ -46,6 +46,7 @@ The following modules will probably need to be installed separately:
 
   * `Pod::Usage`
   * `YAML`
+  * `Term::ReadKey`
 
 ## Initialisation
 
@@ -164,10 +165,29 @@ Show a matrix of the terminal colours. Example with the `ztevenburn` theme:
 
 ![screenshot](img/color_matrix-screenshot.png)
 
+### src/ramp_color
+
+Only works well on a TrueColor terminal.
+
+Given a start color, display a color ramp of increasingly lighter or darker colors, and a demonstration of these colors in a text string.
+
+![screenshot](img/ramp_color-screenshot.png)
+
+See `perldoc src/ramp_color` for more information.
+
+### src/terminal_colors
+
+Modified clone of the XFree86 `256colors.pl`. Can print a 256 colour map as well as a list of all extended colors and their RGB values or a visually pleasing spectrum (the latter only for TrueColor terminals).
+
+See `perldoc src/terminal_colors` for more information.
+
+![screenshot](img/terminal_colors-screenshot.png)
+
+![screenshot](img/terminal_colors-tc-screenshot.png)
+
 ### src/random_theme.pl
 
-Fun stuff for generating a completely random colour theme. Script spits out a
-random YAML configuration.
+Fun stuff for generating a completely random colour theme. Script spits out a random YAML configuration.
 
 To generate, use `random_theme.pl` and run `parse_yaml_theme.pl` to show the
 results:
