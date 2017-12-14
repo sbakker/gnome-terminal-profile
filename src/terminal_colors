@@ -166,27 +166,33 @@ sub show_fullcolor {
 #############################################################################
     my $x = 0;
 
+    my ($w, $h) = GetTerminalSize;
+ 
     # Print all colors from the 6x6x6 color cube, but also show
     # the RGB components of them.
     for (my $red = 0; $red < 6; $red++) {
         for (my $green = 0; $green < 6; $green++) {
             for (my $blue = 0; $blue < 6; $blue++) {
-                if ($x == 3) {
+                my $cnum = 16 + ($red * 36) + ($green * 6) + $blue;
+                my $s = sprintf(
+                    "%3d #%02x%02x%02x [\x1b[48;5;%dm   \x1b[0m]",
+                    $cnum,
+                    ($red ? ($red * 40 + 55) : 0),
+                    ($green ? ($green * 40 + 55) : 0),
+                    ($blue ? ($blue * 40 + 55) : 0),
+                    $cnum,
+                );
+
+                if ($x + 17 + 4 >= $w-1) {
                     print "\n";
                     $x = 0;
                 }
                 elsif ($x) {
-                    print "    ";
+                    print ' ' x 4;
+                    $x += 4;
                 }
-
-                printf("%3d #%02x%02x%02x = %3d = [\x1b[48;5;%dm   \x1b[0m]",
-                    ($red ? ($red * 40 + 55) : 0),
-                    ($green ? ($green * 40 + 55) : 0),
-                    ($blue ? ($blue * 40 + 55) : 0),
-                    16 + ($red * 36) + ($green * 6) + $blue,
-                    16 + ($red * 36) + ($green * 6) + $blue,
-                );
-                $x++;
+                print $s;
+                $x += 17;
             }
         }
     }
@@ -194,20 +200,23 @@ sub show_fullcolor {
     # colors 232-255 are a grayscale ramp, intentionally leaving out
     # black and white
     for (my $gray = 0; $gray < 24; $gray++) {
-        if ($x == 3) {
+        my $level = ($gray * 10) + 8;
+        my $cnum = 232 + $gray;
+        my $s = sprintf("%3d #%02x%02x%02x [\x1b[48;5;%dm   \x1b[0m]",
+            $cnum,
+            $level, $level, $level,
+            $cnum,
+        );
+        if ($x + 17 + 4 >= $w-1) {
             print "\n";
             $x = 0;
         }
-        elsif ($x) {
-            print "    ";
+        else {
+            print ' ' x 4;
+            $x += 4;
         }
-        my $level = ($gray * 10) + 8;
-        printf("#%02x%02x%02x = %3d = [\x1b[48;5;%dm   \x1b[0m]",
-            $level, $level, $level,
-            232 + $gray,
-            232 + $gray,
-        );
-        $x++;
+        print $s;
+        $x += 17;
     }
     print "\n";
 }
