@@ -1,6 +1,6 @@
 # YAML Color schemes for Gnome Terminal
 
-Script(s) for defining Gnome Terminal themes with a YAML file.
+Script(s) for defining Gnome Terminal (or Roxterm) themes with a YAML file.
 
 Builds on [Anthony25's gnome-terminal-colors-solarized] for solarized Gnome Terminal colours (the
 repository is added as a submodule of this repository).
