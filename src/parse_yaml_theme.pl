@@ -10,7 +10,7 @@
 #       Author:  Steven Bakker (SB), <sb@monkey-mind.net>
 #      Created:  17 Dec 2014
 #
-#   Copyright (c) 2014-2017 Steven Bakker; All rights reserved.
+#   Copyright (c) 2014-2022 Steven Bakker; All rights reserved.
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the same terms as Perl itself. See "perldoc perlartistic".
@@ -82,6 +82,9 @@ if (@ARGV) {
         }
         elsif ($key eq 'show') {
             show_palette(\%scheme, $palette_ref);
+        }
+        elsif ($key eq 'roxterm') {
+            print_roxterm(\%scheme, $palette_ref);
         }
         elsif ($key eq 'yaml') {
             print YAML::Dump($theme_ref);
@@ -272,6 +275,22 @@ sub demo_string {
     return rgb_start($bg, $fg).$str.rgb_end();
 }
 
+sub print_roxterm {
+    my ($scheme, $palette_ref) = @_;
+
+    my $palette_size = int( @{$palette_ref} );
+
+    say "[roxterm colour scheme]\n",
+        "foreground=$scheme->{fg}\n",
+        "background=$scheme->{bg}\n",
+        "bold=$scheme->{bd}\n",
+        "palette_size=$palette_size";
+
+    for my $i (0..$palette_size-1) {
+        say "$i=$palette_ref->[$i]";
+    }
+}
+
 sub show_palette {
     my ($scheme, $palette_ref) = @_;
 
@@ -336,12 +355,66 @@ parse_yaml_theme.pl - create gnome-terminal theme values from a YAML file
 
 B<parse_yaml_theme.pl>
 I<YAML-file>
-[B<show>|B<bd>|B<bg>|B<fg>|B<palette_dconf>|B<palette_gconf>|B<yaml>|B<shell>|B<compile>] ...
+I<command> ...
+
+=over
+
+=item Command:
+
+B<show>, B<bd>, B<bg>, B<fg>, B<palette_dconf>, B<palette_gconf>,
+B<yaml>, B<roxterm>, B<shell>, B<compile>
+
+=back
 
 =head1 DESCRIPTION
 
 Read I<YAML-file> for the values of a GNOME terminal theme. Spit out
 the colours on STDOUT.
+
+=head1 COMMANDS
+
+=over
+
+=item B<bd>, B<bg>, B<fg>
+
+Print the values for bold, background, and foreground colour, resp.
+
+=item B<compile>
+
+Produce output files that are compatible with the default C<install.sh>
+of L<Anthony's gnome-terminal-colors-solarized>. Will write four files:
+F<bd_color>,
+F<bg_color>,
+F<fg_color>,
+and F<palette>.
+
+=item B<palette_dconf>
+
+Print the palette as a L<dconf|dconf>(1) string.
+
+=item B<palette_gconf>
+
+Print the palette as a C<gconf> string (see
+L<gconftool-2|gconftool-2>).
+
+=item B<roxterm>
+
+Print the colour profile as a L<roxterm|roxterm>(1) colour file.
+
+=item B<shell>
+
+Print the colour profile as a set of shell variables.
+
+=item B<show>
+
+Demonstrate the colour profile in the terminal.
+
+=item B<yaml>
+
+Print back the colour profile as a YAML file, where anchors/references
+have been replaced.
+
+=back
 
 =head1 OPTIONS
 
@@ -420,9 +493,9 @@ Print the palette colors on the terminal (only works for gnome-terminal
     fg_color: |++|
     bg_color: |--|
     palette:
-             Black    Red    Green  Yellow   Blue   Magenta  Cyan    White
-    Normal: [-----] [-----] [-----] [-----] [-----] [-----] [-----] [-----]
-    Bright: [+++++] [+++++] [+++++] [+++++] [+++++] [+++++] [+++++] [+++++]
+             Black   Red   Green  Yellow   Blue  Magenta  Cyan   White
+    Normal: [-----] [---] [-----] [-----] [----] [-----] [----] [-----]
+    Bright: [+++++] [+++] [+++++] [+++++] [++++] [+++++] [++++] [+++++]
 
 =head2 Default Output
 
@@ -453,15 +526,17 @@ C<\> characters, for clarity's sake:
     bd_color='#E3E3CECEABAB'
     bg_color='#1C1C1C1C1C1C'
     fg_color='#BABABDBDB6B6'
-    palette_dconf="'#1C1C1C1C1C1C', '#CCCC93939393', '#7F7F9F9F7F7F', \
-     '#E3E3CECEABAB', '#DFDFAFAF8F8F', '#CCCC93939393', '#8C8CD0D0D3D3', \
-     '#BABABDBDB6B6', '#3F3F3F3F3F3F', '#CCCC93939393', '#7F7F9F9F7F7F', \
-     '#E3E3CECEABAB', '#DFDFAFAF8F8F', '#CCCC93939393', '#8C8CD0D0D3D3', \
-     '#DCDCDCDCCCCC'"
-    palette_gconf='#1C1C1C1C1C1C:#CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:\
-     #DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:#BABABDBDB6B6:#3F3F3F3F3F3F:\
-     #CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:#DFDFAFAF8F8F:#CCCC93939393:\
-     #8C8CD0D0D3D3:#DCDCDCDCCCCC'
+    palette_dconf="'#1C1C1C1C1C1C', '#CCCC93939393',
+     '#7F7F9F9F7F7F', '#E3E3CECEABAB', '#DFDFAFAF8F8F', \
+     '#CCCC93939393', '#8C8CD0D0D3D3', '#BABABDBDB6B6', \
+     '#3F3F3F3F3F3F', '#CCCC93939393', '#7F7F9F9F7F7F', \
+     '#E3E3CECEABAB', '#DFDFAFAF8F8F', '#CCCC93939393', \
+     '#8C8CD0D0D3D3', '#DCDCDCDCCCCC'"
+    palette_gconf='#1C1C1C1C1C1C:#CCCC93939393:#7F7F9F9F7F7F:\
+     #E3E3CECEABAB:#DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:\
+     #BABABDBDB6B6:#3F3F3F3F3F3F:#CCCC93939393:#7F7F9F9F7F7F:\
+     #E3E3CECEABAB:#DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:\
+     #DCDCDCDCCCCC'
 
 Typical usage:
 
@@ -513,6 +588,34 @@ C<\> characters, for clarity's sake):
     #3F3F3F3F3F3F:#CCCC93939393:#7F7F9F9F7F7F:#E3E3CECEABAB:\
     #DFDFAFAF8F8F:#CCCC93939393:#8C8CD0D0D3D3:#DCDCDCDCCCCC
 
+=head2 Roxterm Colour Scheme
+
+The C<roxterm> command will print the colour theme in the
+L<roxterm|roxterm(1)> format:
+
+    $ parse_yaml_theme.pl steven.yaml roxterm
+    [roxterm colour scheme]
+    foreground=#BABABDBDB6B6
+    background=#1C1C1C1C1C1C
+    bold=#E3E3CECEABAB
+    palette_size=16
+    0=#1C1C1C1C1C1C
+    1=#CCCC93939393
+    2=#7F7F9F9F7F7F
+    3=#E3E3CECEABAB
+    4=#DFDFAFAF8F8F
+    5=#CCCC93939393
+    6=#8C8CD0D0D3D3
+    7=#BABABDBDB6B6
+    8=#3F3F3F3F3F3F
+    9=#CCCC93939393
+    10=#7F7F9F9F7F7F
+    11=#E3E3CECEABAB
+    12=#DFDFAFAF8F8F
+    13=#CCCC93939393
+    14=#8C8CD0D0D3D3
+    15=#DCDCDCDCCCCC
+
 =head1 EXIT CODE
 
 =over
@@ -527,13 +630,20 @@ One or more errors occurred.
 
 =back
 
+=head1 SEE ALSO
+
+L<dconf|dconf>(1),
+L<gconftool-2|gconftool-2>(1),
+L<gnome-terminal|gnome-terminal>(1),
+L<roxterm|roxterm>(1).
+
 =head1 AUTHOR
 
 Steven Bakker E<lt>sb@monkey-mind.netE<gt>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2014-2017 Steven Bakker; All rights reserved.
+Copyright (c) 2014-2022 Steven Bakker; All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself. See "perldoc perlartistic".
